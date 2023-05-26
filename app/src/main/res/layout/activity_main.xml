@@ -15,50 +15,51 @@
 
     <TextView
         android:id="@+id/extractedTextView"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_width="379dp"
+        android:layout_height="217dp"
         android:layout_below="@+id/imageView"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="18dp"
         android:hint="텍스트 나오는 부분"
         android:padding="16dp"
+        android:scrollbars="vertical"
         android:textColor="@color/white"
         android:textSize="16sp" />
-    
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true">
+
         <Button
             android:id="@+id/capturePhotoButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="등록"
-            android:onClick="onCapturePhotoClick" />
+            android:onClick="onCapturePhotoClick"
+            android:text="등록" />
 
         <Button
             android:id="@+id/convertToPdfButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="PDF 변환"
-            android:onClick="onConvertToPdfClick" />
+            android:onClick="onConvertToPdfClick"
+            android:text="PDF 변환" />
 
         <Button
             android:id="@+id/btn1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="삭제"
-            />
+            android:text="삭제" />
 
         <Button
-            android:id="@+id/btn2"
-            android:layout_width="wrap_content"
+            android:id="@+id/openPdfButton"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="더보기"
-            />
+            android:onClick="onOpenPdfButtonClick"
+            android:text="더보기" />
 
     </LinearLayout>
 
