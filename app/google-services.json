@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "294973430871",
+    "project_id": "change-a-receipt-an-e-receip",
+    "storage_bucket": "change-a-receipt-an-e-receip.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:294973430871:android:47d18d2f4da863f7e0d712",
+        "android_client_info": {
+          "package_name": "com.example.cre"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwQYgkrn5dCdz5j1VOeNm3MIj2C9Utc6I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
