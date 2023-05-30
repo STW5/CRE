@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView imageView;
     private Bitmap capturedPhoto;
+    private Bitmap originalPhoto;
+
     private TextView extractedTextView;
 
     private static final String API_KEY = "AIzaSyBOYyXYt_9_X--zSfzhBb6a2S3bCRMuBvI";
@@ -87,14 +89,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onSaveToGalleryClick(View view) {
-        if (capturedPhoto != null) {
-            BitmapDrawable bitmapDrawable = (BitmapDrawable) imageView.getDrawable();
-            Bitmap photo = bitmapDrawable.getBitmap();
-            savePhotoToGallery(photo);
+        if (originalPhoto != null) {
+            savePhotoToGallery(originalPhoto);
         } else {
-            Toast.makeText(this, "No photo captured", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "촬영된 영수증이 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void savePhotoToGallery(Bitmap photo) {
         String imageFileName = "captured_photo.jpg";
@@ -139,16 +140,16 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void onConvertToPdfClick(View view) {
-        if (capturedPhoto != null) {
+        if (originalPhoto != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 String fileName = "captured_photo.pdf";
-                savePhotoAsPdf(capturedPhoto, fileName);
+                savePhotoAsPdf(originalPhoto, fileName);
             } else {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
                 } else {
                     String fileName = "captured_photo.pdf";
-                    savePhotoAsPdf(capturedPhoto, fileName);
+                    savePhotoAsPdf(originalPhoto, fileName);
                 }
             }
         } else {
@@ -191,7 +192,8 @@ public class MainActivity extends AppCompatActivity {
             Bundle extras = data.getExtras();
             if (extras != null) {
                 capturedPhoto = (Bitmap) extras.get("data");
-                imageView.setImageBitmap(capturedPhoto);
+                originalPhoto = capturedPhoto.copy(capturedPhoto.getConfig(), true);
+                imageView.setImageBitmap(originalPhoto);
 
                 performGoogleVisionAPICall(capturedPhoto);
             }
@@ -211,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         KoreanTextRecognizerOptions options = new KoreanTextRecognizerOptions.Builder().build();
         TextRecognizer recognizer = TextRecognition.getClient(options);
 
-        // Create an ML Kit InputImage from the Bitmap
+        // Create an ML Kit InputImage from the photo
         InputImage image = InputImage.fromBitmap(photo, 0);
 
         // Process the image using the text recognizer
@@ -235,7 +237,12 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-
+    public void onDeleteButtonClick(View view) {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        Toast.makeText(this, "삭제되었습니다.", Toast.LENGTH_SHORT).show();
+        startActivity(intent);
+    }
 
     public void onViewPhotosClick(View view) {
         // Check if the READ_EXTERNAL_STORAGE permission is granted
@@ -251,9 +258,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void openImageFolder() {
-        Uri imageUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        Intent intent = new Intent(Intent.ACTION_VIEW, imageUri);
+        File dcimDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        Uri imageUri = Uri.parse(dcimDirectory.getAbsolutePath());
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(imageUri, "image/*");
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
@@ -261,6 +271,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "No file manager app found", Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
     @Override
