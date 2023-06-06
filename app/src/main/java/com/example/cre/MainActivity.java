@@ -263,14 +263,17 @@ public class MainActivity extends AppCompatActivity {
         File dcimDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         Uri imageUri = Uri.parse(dcimDirectory.getAbsolutePath());
 
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(imageUri, "image/*");
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setDataAndType(imageUri, "*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
         if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
+            startActivity(Intent.createChooser(intent, "Select File"));
         } else {
             Toast.makeText(this, "No file manager app found", Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
 
