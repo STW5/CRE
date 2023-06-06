@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.pdf.PdfDocument;
 import android.media.MediaScannerConnection;
@@ -15,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.ImageView;
@@ -38,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
+import android.text.TextUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -140,34 +144,44 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void onConvertToPdfClick(View view) {
-        if (originalPhoto != null) {
+        String extractedText = extractedTextView.getText().toString();
+        if (!TextUtils.isEmpty(extractedText)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                String fileName = "captured_photo.pdf";
-                savePhotoAsPdf(originalPhoto, fileName);
+                String fileName = "extracted_text.pdf";
+                saveTextAsPdf(extractedText, fileName);
             } else {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
                 } else {
-                    String fileName = "captured_photo.pdf";
-                    savePhotoAsPdf(originalPhoto, fileName);
+                    String fileName = "extracted_text.pdf";
+                    saveTextAsPdf(extractedText, fileName);
                 }
             }
         } else {
-            Toast.makeText(this, "No receipt entered", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No text extracted", Toast.LENGTH_SHORT).show();
         }
     }
 
 
-    private void savePhotoAsPdf(Bitmap photo, String fileName) {
+
+    private void saveTextAsPdf(String text, String fileName) {
         try {
             // Create a new PDF document
             PdfDocument document = new PdfDocument();
 
-            // Create a page with the photo as an image
-            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(photo.getWidth(), photo.getHeight(), 1).create();
+            // Create a page with the text content
+            PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(600, 800, 1).create();
             PdfDocument.Page page = document.startPage(pageInfo);
             Canvas canvas = page.getCanvas();
-            canvas.drawBitmap(photo, 0, 0, null);
+            Paint paint = new Paint();
+            paint.setColor(Color.BLACK);
+            paint.setTextSize(12f);
+            float x = 10f;
+            float y = 25f;
+            for (String line : text.split("\n")) {
+                canvas.drawText(line, x, y, paint);
+                y += paint.descent() - paint.ascent();
+            }
             document.finishPage(page);
 
             // Save the PDF document to the app's external files directory
@@ -176,10 +190,10 @@ public class MainActivity extends AppCompatActivity {
             document.writeTo(outputStream);
             document.close();
 
-            Toast.makeText(this, "Photo saved as PDF: " + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Text saved as PDF: " + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(this, "Failed to save photo as PDF", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Failed to save text as PDF", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -263,17 +277,14 @@ public class MainActivity extends AppCompatActivity {
         File dcimDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         Uri imageUri = Uri.parse(dcimDirectory.getAbsolutePath());
 
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setDataAndType(imageUri, "*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(imageUri, "image/*");
         if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(Intent.createChooser(intent, "Select File"));
+            startActivity(intent);
         } else {
             Toast.makeText(this, "No file manager app found", Toast.LENGTH_SHORT).show();
         }
     }
-
 
 
 
@@ -282,8 +293,8 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == WRITE_EXTERNAL_STORAGE_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                String filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/captured_photo.pdf";
-                savePhotoAsPdf(capturedPhoto, filePath);
+                String fileName = "extracted_text.pdf";
+                saveTextAsPdf(extractedTextView.getText().toString(), fileName);
             } else {
                 Toast.makeText(this, "파일 권한 거부", Toast.LENGTH_SHORT).show();
             }
@@ -296,4 +307,5 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 }
