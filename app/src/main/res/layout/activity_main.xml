@@ -35,37 +35,42 @@
         <Button
             android:id="@+id/saveButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onSaveToGalleryClick"
-            android:textColor="#000000"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="등록" />
+            android:baselineAligned="false"
+            android:onClick="onSaveToGalleryClick"
+            android:text="등록"
+            android:textColor="#000000" />
 
         <Button
             android:id="@+id/convertToPdfButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="onConvertToPdfClick"
-            android:textColor="#000000"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:text="PDF" />
+            android:baselineAligned="false"
+            android:onClick="onConvertToPdfClick"
+            android:text="PDF 저장"
+            android:textColor="#000000" />
 
         <Button
             android:id="@+id/btnDelete"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:textColor="#000000"
+            android:baselineAligned="false"
             android:onClick="onDeleteButtonClick"
-            android:text="삭제" />
+            android:text="삭제"
+            android:textColor="#000000" />
 
         <Button
             android:id="@+id/viewPhotosButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="View Photos"
-            android:textColor="#000000"
-            android:onClick="onViewPhotosClick" />
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:baselineAligned="false"
+            android:onClick="onViewPhotosClick"
+            android:text="라이브러리"
+            android:textColor="#000000" />
 
 
     </LinearLayout>
@@ -74,12 +79,12 @@
         android:id="@+id/capturePhotoButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/extractedTextView"
+        android:layout_alignParentBottom="true"
         android:layout_marginTop="16dp"
-        android:textColor="#000000"
-        android:layout_marginBottom="-47dp"
+        android:layout_marginBottom="51dp"
         android:onClick="onCapturePhotoClick"
-        android:text="촬영" />
+        android:text="촬영"
+        android:textColor="#000000" />
 
 
 </RelativeLayout>

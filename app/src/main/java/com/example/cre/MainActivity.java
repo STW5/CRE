@@ -25,9 +25,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.vision.common.InputImage;
@@ -102,7 +104,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void savePhotoToGallery(Bitmap photo) {
-        String imageFileName = "captured_photo.jpg";
+        String baseFileName = "receipt";
+        String imageFileName = baseFileName + "_" + System.currentTimeMillis() + ".jpg";
 
         OutputStream fos;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -134,26 +137,27 @@ public class MainActivity extends AppCompatActivity {
                 // Update gallery
                 MediaScannerConnection.scanFile(this, new String[]{imageFile.getAbsolutePath()}, null, null);
 
-                Toast.makeText(this, "Photo saved to gallery", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "갤러리에 영수증 사진이 보관되었습니다.", Toast.LENGTH_SHORT).show();
             } catch (IOException e) {
                 e.printStackTrace();
-                Toast.makeText(this, "Failed to save photo to gallery", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "실패하였습니다.", Toast.LENGTH_SHORT).show();
             }
         }
     }
+
 
 
     public void onConvertToPdfClick(View view) {
         String extractedText = extractedTextView.getText().toString();
         if (!TextUtils.isEmpty(extractedText)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                String fileName = "extracted_text.pdf";
+                String fileName = "receipt";
                 saveTextAsPdf(extractedText, fileName);
             } else {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
                 } else {
-                    String fileName = "extracted_text.pdf";
+                    String fileName = "receipt";
                     saveTextAsPdf(extractedText, fileName);
                 }
             }
@@ -164,7 +168,13 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void saveTextAsPdf(String text, String fileName) {
+
+    private int pdfFileCounter = 1; // Counter for PDF file names
+
+    private void saveTextAsPdf(String text, String baseFileName) {
+        String fileName = baseFileName + pdfFileCounter + ".pdf";
+        pdfFileCounter++;
+
         try {
             // Create a new PDF document
             PdfDocument document = new PdfDocument();
@@ -190,12 +200,13 @@ public class MainActivity extends AppCompatActivity {
             document.writeTo(outputStream);
             document.close();
 
-            Toast.makeText(this, "Text saved as PDF: " + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "PDF가 저장되었습니다.: " + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(this, "Failed to save text as PDF", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "PDF 저장에 실패하였습니다.", Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
     @Override
@@ -267,24 +278,65 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     READ_MEDIA_IMAGES_PERMISSION_REQUEST_CODE);
         } else {
-            // Permission granted, show the photos
-            openImageFolder();
+            // Permission granted, open the PDF file
+            openPdfFile();
         }
     }
 
 
-    private void openImageFolder() {
-        File dcimDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        Uri imageUri = Uri.parse(dcimDirectory.getAbsolutePath());
+    private void openPdfFile() {
+        // Get the directory of the PDF files
+        File pdfDirectory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
 
-        Intent intent = new Intent(Intent.ACTION_VIEW);
-        intent.setDataAndType(imageUri, "image/*");
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivity(intent);
+        // Check if the directory exists
+        if (pdfDirectory != null && pdfDirectory.exists()) {
+            // Get the list of files in the directory
+            File[] files = pdfDirectory.listFiles();
+
+            // Check if there are any PDF files in the directory
+            if (files != null && files.length > 0) {
+                // Create an array to store the file names
+                String[] fileNames = new String[files.length];
+                for (int i = 0; i < files.length; i++) {
+                    fileNames[i] = files[i].getName();
+                }
+
+                // Create an AlertDialog to display the file selection dialog
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Select a PDF file")
+                        .setItems(fileNames, (dialog, which) -> {
+                            // Get the selected PDF file
+                            File selectedFile = files[which];
+
+                            // Create a content URI for the selected file using FileProvider
+                            Uri fileUri = FileProvider.getUriForFile(this,
+                                    BuildConfig.APPLICATION_ID + ".fileprovider",
+                                    selectedFile);
+
+                            // Create an intent to view the selected PDF file
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(fileUri, "application/pdf");
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                            // Check if there is an app to handle the intent
+                            if (intent.resolveActivity(getPackageManager()) != null) {
+                                startActivity(intent);
+                            } else {
+                                Toast.makeText(this, "No app found to open PDF files", Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .create()
+                        .show();
+            } else {
+                Toast.makeText(this, "No PDF files found", Toast.LENGTH_SHORT).show();
+            }
         } else {
-            Toast.makeText(this, "No file manager app found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "PDF directory not found", Toast.LENGTH_SHORT).show();
         }
     }
+
+
 
 
 
