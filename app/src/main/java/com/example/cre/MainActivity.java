@@ -53,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int READ_MEDIA_IMAGES_PERMISSION_REQUEST_CODE = 400;
 
-
     private ImageView imageView;
     private Bitmap capturedPhoto;
     private Bitmap originalPhoto;
@@ -61,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView extractedTextView;
 
     private static final String API_KEY = "AIzaSyBOYyXYt_9_X--zSfzhBb6a2S3bCRMuBvI";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,14 +70,12 @@ public class MainActivity extends AppCompatActivity {
         extractedTextView = findViewById(R.id.extractedTextView);
 
 
-        // Request camera permission if not already granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.CAMERA},
                     CAMERA_PERMISSION_REQUEST_CODE);
         } else {
-            // Camera permission is already granted, capture the photo
             capturePhoto();
         }
     }
@@ -101,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "촬영된 영수증이 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
-
 
     private void savePhotoToGallery(Bitmap photo) {
         String baseFileName = "receipt";
@@ -134,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
                 photo.compress(Bitmap.CompressFormat.JPEG, 100, fos);
                 fos.close();
 
-                // Update gallery
                 MediaScannerConnection.scanFile(this, new String[]{imageFile.getAbsolutePath()}, null, null);
 
                 Toast.makeText(this, "갤러리에 영수증 사진이 보관되었습니다.", Toast.LENGTH_SHORT).show();
@@ -144,8 +138,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
 
     public void onConvertToPdfClick(View view) {
         String extractedText = extractedTextView.getText().toString();
@@ -162,24 +154,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         } else {
-            Toast.makeText(this, "No text extracted", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "입력된 텍스트가 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
 
-
-
-
-    private int pdfFileCounter = 1; // Counter for PDF file names
+    private int pdfFileCounter;
 
     private void saveTextAsPdf(String text, String baseFileName) {
         String fileName = baseFileName + pdfFileCounter + ".pdf";
         pdfFileCounter++;
 
         try {
-            // Create a new PDF document
             PdfDocument document = new PdfDocument();
 
-            // Create a page with the text content
             PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(600, 800, 1).create();
             PdfDocument.Page page = document.startPage(pageInfo);
             Canvas canvas = page.getCanvas();
@@ -194,7 +181,6 @@ public class MainActivity extends AppCompatActivity {
             }
             document.finishPage(page);
 
-            // Save the PDF document to the app's external files directory
             File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName);
             FileOutputStream outputStream = new FileOutputStream(file);
             document.writeTo(outputStream);
@@ -206,8 +192,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "PDF 저장에 실패하였습니다.", Toast.LENGTH_SHORT).show();
         }
     }
-
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -225,26 +209,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (requestCode == READ_MEDIA_IMAGES_PERMISSION_REQUEST_CODE && resultCode == RESULT_OK) {
-            // Get the selected image URI
             Uri imageUri = data.getData();
 
-            // Do something with the selected image URI, such as displaying it in an ImageView
             imageView.setImageURI(imageUri);
         }
     }
 
     private void performGoogleVisionAPICall(Bitmap photo) {
-        // Configure the text recognizer
         KoreanTextRecognizerOptions options = new KoreanTextRecognizerOptions.Builder().build();
         TextRecognizer recognizer = TextRecognition.getClient(options);
 
-        // Create an ML Kit InputImage from the photo
         InputImage image = InputImage.fromBitmap(photo, 0);
 
-        // Process the image using the text recognizer
         recognizer.process(image)
                 .addOnSuccessListener(text -> {
-                    // Process the text recognition result
                     StringBuilder extractedText = new StringBuilder();
                     for (Text.TextBlock textBlock : text.getTextBlocks()) {
                         extractedText.append(textBlock.getText());
@@ -257,8 +235,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "완료", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
-                    // Handle any errors
-                    Toast.makeText(this, "Failed to process image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "이미지를 불러오는데, 실패하였습니다 : " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -270,75 +247,57 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onViewPhotosClick(View view) {
-        // Check if the READ_EXTERNAL_STORAGE permission is granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                 != PackageManager.PERMISSION_GRANTED) {
-            // Permission not granted, request the permission
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                     READ_MEDIA_IMAGES_PERMISSION_REQUEST_CODE);
         } else {
-            // Permission granted, open the PDF file
             openPdfFile();
         }
     }
 
-
     private void openPdfFile() {
-        // Get the directory of the PDF files
         File pdfDirectory = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
 
-        // Check if the directory exists
         if (pdfDirectory != null && pdfDirectory.exists()) {
-            // Get the list of files in the directory
             File[] files = pdfDirectory.listFiles();
 
-            // Check if there are any PDF files in the directory
             if (files != null && files.length > 0) {
-                // Create an array to store the file names
                 String[] fileNames = new String[files.length];
                 for (int i = 0; i < files.length; i++) {
                     fileNames[i] = files[i].getName();
                 }
 
-                // Create an AlertDialog to display the file selection dialog
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Select a PDF file")
                         .setItems(fileNames, (dialog, which) -> {
-                            // Get the selected PDF file
                             File selectedFile = files[which];
 
-                            // Create a content URI for the selected file using FileProvider
                             Uri fileUri = FileProvider.getUriForFile(this,
                                     BuildConfig.APPLICATION_ID + ".fileprovider",
                                     selectedFile);
 
-                            // Create an intent to view the selected PDF file
                             Intent intent = new Intent(Intent.ACTION_VIEW);
                             intent.setDataAndType(fileUri, "application/pdf");
                             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-                            // Check if there is an app to handle the intent
                             if (intent.resolveActivity(getPackageManager()) != null) {
                                 startActivity(intent);
                             } else {
-                                Toast.makeText(this, "No app found to open PDF files", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this, "pdf파일을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setNegativeButton("Cancel", null)
                         .create()
                         .show();
             } else {
-                Toast.makeText(this, "No PDF files found", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "pdf파일을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(this, "PDF directory not found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "pdf 저장소가 없습니다.", Toast.LENGTH_SHORT).show();
         }
     }
-
-
-
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
